@@ -1,4 +1,3 @@
-WeatherDashboard.tsx;
 // WeatherDashboard.tsx – zentrale Logik
 import React, { useEffect, useState } from "react";
 import WeatherCard from "./WeatherCard";
@@ -61,6 +60,46 @@ function WeatherDashboard() {
     }
   };
 
+  const runConnectionTest = async () => {
+    logMessage("=== Verbindungstest gestartet ===");
+
+    try {
+      const httpbin = await fetch("https://httpbin.org/get");
+      logMessage(`✓ Internetverbindung OK (Status: ${httpbin.status})`);
+    } catch (err) {
+      logMessage(`✗ Internetverbindung fehlgeschlagen: ${err}`);
+    }
+
+    try {
+      const temp = await fetch(
+        `https://wttr.in/${encodeURIComponent(city)}?format=%t`,
+        {
+          headers: { "User-Agent": "Mozilla/5.0" },
+        }
+      );
+      const txt = await temp.text();
+      logMessage(`✓ wttr.in Antwort: ${txt.trim()}`);
+    } catch (err) {
+      logMessage(`✗ wttr.in Fehler: ${err}`);
+    }
+
+    try {
+      const json = await fetch(
+        `https://wttr.in/${encodeURIComponent(city)}?format=j1`,
+        {
+          headers: { "User-Agent": "Mozilla/5.0" },
+        }
+      );
+      const data = await json.json();
+      logMessage(`✓ JSON-API funktioniert`);
+      logMessage(`Aktuelle Temperatur: ${data.current_condition[0].temp_C}°C`);
+    } catch (err) {
+      logMessage(`✗ JSON API Fehler: ${err}`);
+    }
+
+    logMessage("=== Test abgeschlossen ===");
+  };
+
   useEffect(() => {
     setTimeout(fetchWeather, 2000);
   }, []);
@@ -74,6 +113,7 @@ function WeatherDashboard() {
           onChange={(e) => setCity(e.target.value)}
         />
         <button onClick={fetchWeather}>Aktualisieren</button>
+        <button onClick={runConnectionTest}>Test Verbindung</button>
       </div>
 
       {weather && <WeatherCard data={weather} />}
